@@ -8,6 +8,9 @@ sourceforge.
 The original custom build system has been replaced with CMake, and the old bundled linear algebra
 libraries removed in favour of modern libraries optimised for current hardware.
 
+### Requirements
+
+This is the development version of ParaFEM and requires an installation of PETSc as well as functional BLAS and LAPACK installations. It should not matter what implementation you have provided they are api compatible with the reference implementations.  So far this has been tested against BLAS/LaPACK-reference and the intel MKL.
 
 ### Building
 

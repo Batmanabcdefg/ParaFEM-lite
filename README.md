@@ -15,12 +15,17 @@ Building is done using an "out-of-tree" CMake build.  This just means you don't 
 source folder.  Just make a new build folder and run cmake there:
 
 ```
-git clone git@github.com:ptooley/ParaFEM-lite.git
+git clone --recursive git@github.com:ptooley/ParaFEM-lite.git
 cd ParaFEM-lite
 mkdir build
 cd build
 cmake ..
 make
+```
+Note that if you have PETSc installed in a non-standard place you may need to help CMake out by specifying the location with
+
+```
+export PETSC_DIR=/path/to/petsc/dir
 ```
 
 ### Status

@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.10.2)
+cmake_minimum_required (VERSION 3.7.0)
 project (ParaFEM)
 enable_language(Fortran)
 

@@ -642,18 +642,18 @@ MODULE GATHER_SCATTER
 !------------------------------------------------------------------------------
 
     DO i = 1,numpesget
-      CALL MPI_PROBE(MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,vstatus(1,i),ier)
+      CALL MPI_PROBE(MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,vstatus(:,i),ier)
       IF (ier .NE. MPI_SUCCESS) THEN
         CALL MPERROR('Error in (B1) probe',ier)
       END IF
-      CALL MPI_GET_COUNT(vstatus(1,i),MPI_REAL8,recbufsize,ier)
+      CALL MPI_GET_COUNT(vstatus(:,i),MPI_REAL8,recbufsize,ier)
       IF (ier .NE. MPI_SUCCESS) THEN
         CALL MPERROR('Error in (B1) get_count',ier)
       END IF
       pe_number = vstatus(MPI_tag,i)
       nstart = lengetsum(pe_number-1)
       CALL MPI_RECV(pl_pp(nstart + 1),lenget(pe_number),MPI_REAL8,       &
-       vstatus(MPI_SOURCE,i),vstatus(MPI_TAG,i),MPI_COMM_WORLD,vstatus(1,i),ier)
+       vstatus(MPI_SOURCE,i),vstatus(MPI_TAG,i),MPI_COMM_WORLD,vstatus(:,i),ier)
       IF (ier .NE. MPI_SUCCESS) THEN
         CALL MPERROR('Error in (B1) receive',ier)
       END IF
@@ -804,12 +804,11 @@ MODULE GATHER_SCATTER
 
     DO i = 1, numpesput
       CALL MPI_PROBE(MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,               &
-!                    vstatus(1,i),ier)
                      vstatus(:,i),ier)
       IF (ier .NE. MPI_SUCCESS) THEN
         CALL MPERROR('Error in (B5) probe',ier)
       END IF
-      CALL MPI_GET_COUNT(vstatus(1,i),MPI_REAL8,recbufsize,ier)
+      CALL MPI_GET_COUNT(vstatus(:,i),MPI_REAL8,recbufsize,ier)
       IF (ier .NE. MPI_SUCCESS) THEN
         CALL MPERROR('Error in (B5) get_count',ier)
       END IF
@@ -829,7 +828,7 @@ MODULE GATHER_SCATTER
         STOP
       ENDIF  
       CALL MPI_RECV (tempput(1),lenput(pe_number),MPI_REAL8,                  &
-       vstatus(MPI_SOURCE,i),vstatus(MPI_TAG,i),MPI_COMM_WORLD,vstatus(1,i),ier)
+       vstatus(MPI_SOURCE,i),vstatus(MPI_TAG,i),MPI_COMM_WORLD,vstatus(:,i),ier)
       IF (ier .NE. MPI_SUCCESS) THEN
         CALL MPERROR('Error in (B5) receive',ier)
       END IF
@@ -986,11 +985,11 @@ MODULE GATHER_SCATTER
 
     DO i = 1,numpesput
       CALL MPI_PROBE(MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,     &
-                     vstatus(1,i),ier)
+                     vstatus(:,i),ier)
       IF (ier.NE.MPI_SUCCESS) THEN
         CALL MPERROR('Error in (B5) probe',ier)
       END IF
-      CALL MPI_GET_COUNT(vstatus(1,i),MPI_REAL8,recbufsize,ier)
+      CALL MPI_GET_COUNT(vstatus(:,i),MPI_REAL8,recbufsize,ier)
       IF (ier.NE.MPI_SUCCESS) THEN
         CALL MPERROR('Error in (B5) get_count',ier)
       END IF
@@ -1013,7 +1012,7 @@ MODULE GATHER_SCATTER
       !#endif
 
       CALL MPI_RECV(tempput(1),lenput(pe_number),MPI_REAL8,     &
-      vstatus(MPI_SOURCE,i),vstatus(MPI_TAG,i),MPI_COMM_WORLD,vstatus(1,i),ier)
+      vstatus(MPI_SOURCE,i),vstatus(MPI_TAG,i),MPI_COMM_WORLD,vstatus(:,i),ier)
       IF (ier.NE.MPI_SUCCESS) THEN
         CALL MPERROR('Error in (B5) receive',ier)
       END IF
@@ -1317,7 +1316,7 @@ MODULE GATHER_SCATTER
       IF (ier .NE. MPI_SUCCESS) THEN
         CALL MPERROR('Error in (A4) isend',ier)
       END IF
-      CALL MPI_TEST(vrequest(ii),lflag,vstatus(1,ii),ier)
+      CALL MPI_TEST(vrequest(ii),lflag,vstatus(:,ii),ier)
       WRITE(details,'("PE: ",I4," request sent to PE: ",I5)') numpe, i
     END DO
 
@@ -1344,7 +1343,7 @@ MODULE GATHER_SCATTER
  
     DO                       ! Do until count limit reached
       CALL MPI_IPROBE(MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,  &
-          lflag,vstatus(1,numpesput+1),ier)
+          lflag,vstatus(:,numpesput+1),ier)
       IF (ier .NE. MPI_SUCCESS) THEN
         CALL MPERROR('Error in (A5) iprobe',ier)
       END IF
@@ -1360,7 +1359,7 @@ MODULE GATHER_SCATTER
         END IF
             
 
-        CALL MPI_GET_COUNT (vstatus(1,numpesput),MPI_INTEGER,recbufsize,ier)
+        CALL MPI_GET_COUNT (vstatus(:,numpesput),MPI_INTEGER,recbufsize,ier)
         IF (ier .NE. MPI_SUCCESS) THEN
           CALL MPERROR('Error in (A5) get_count',ier)
         END IF
@@ -1369,7 +1368,7 @@ MODULE GATHER_SCATTER
         pesput(ii) = pe_number
         putpes(pe_number) = ii
         CALL MPI_RECV (toput_temp(1,ii),lenput(pe_number),MPI_INTEGER,        &
-        MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,vstatus(1,numpesput),ier)
+        MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,vstatus(:,numpesput),ier)
         IF (ier .NE. MPI_SUCCESS) THEN
           CALL MPERROR('Error in (A5) receive',ier)
         END IF
@@ -1719,7 +1718,7 @@ MODULE GATHER_SCATTER
       IF (ier .NE. MPI_SUCCESS) THEN
         CALL MPERROR('Error in (A4) isend',ier)
       END IF
-      CALL MPI_TEST(vrequest(ii),lflag,vstatus(1,ii),ier)
+      CALL MPI_TEST(vrequest(ii),lflag,vstatus(:,ii),ier)
       IF(verbose) THEN
         WRITE(details,'("PE: ",I4," request sent to PE: ",I5)') numpe, i
       END IF
@@ -1748,7 +1747,7 @@ MODULE GATHER_SCATTER
  
     DO count = 1,pesputcount(numpe)
       CALL MPI_PROBE(MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,  &
-          vstatus(1,numpesput+1),ier)
+          vstatus(:,numpesput+1),ier)
       IF (ier .NE. MPI_SUCCESS) THEN
         CALL MPERROR('Error in (A5) probe',ier)
       END IF
@@ -1761,7 +1760,7 @@ MODULE GATHER_SCATTER
          STOP
       END IF
       
-      CALL MPI_GET_COUNT (vstatus(1,numpesput),MPI_INTEGER,recbufsize,ier)
+      CALL MPI_GET_COUNT (vstatus(:,numpesput),MPI_INTEGER,recbufsize,ier)
       IF (ier .NE. MPI_SUCCESS) THEN
          CALL MPERROR('Error in (A5) get_count',ier)
       END IF
@@ -1770,7 +1769,7 @@ MODULE GATHER_SCATTER
       pesput(ii) = pe_number
       putpes(pe_number) = ii
       CALL MPI_RECV (toput_temp(1,ii),lenput(pe_number),MPI_INTEGER,        &
-           MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,vstatus(1,numpesput),ier)
+           MPI_ANY_SOURCE,MPI_ANY_TAG,MPI_COMM_WORLD,vstatus(:,numpesput),ier)
       IF (ier .NE. MPI_SUCCESS) THEN
          CALL MPERROR('Error in (A5) receive',ier)
       END IF

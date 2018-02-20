@@ -977,7 +977,7 @@ MODULE INPUT
           READ(10,*)k,k,k,k,g_num(:,iel),k
         END DO
         CALL MPI_SEND(g_num(:,1:readCount(i)),bufsize,MPI_INTEGER,i-1,i,     &
-                      MPI_COMM_WORLD,status,ier)
+                      MPI_COMM_WORLD,ier)
       END IF
       IF(numpe == i) CALL MPI_RECV(g_num_pp,bufsize,MPI_INTEGER,0,i,         &
                                    MPI_COMM_WORLD,status,ier)
@@ -1129,11 +1129,11 @@ MODULE INPUT
   DO i=1,npes
     IF(i == 1) THEN  ! local data
       IF(numpe == 1) THEN
-	  
+
         DO j = 1,nn*ndim  
           READ(10,*) !skip nodes until reaching the elements
         END DO
-		
+
         READ(10,'(A)') cbuffer     ; IF(verbose) PRINT *, cbuffer
         READ(10,*) nels_in         ; IF(verbose) PRINT *, nels_in
         iel = readCount(i)
@@ -1145,7 +1145,7 @@ MODULE INPUT
         iel = readCount(i)
         READ(10,*) g_num(:,1:iel)
         CALL MPI_SEND(g_num(:,1:readCount(i)),bufsize,MPI_INTEGER,i-1,i,     &
-                      MPI_COMM_WORLD,status,ier)
+                      MPI_COMM_WORLD,ier)
       END IF
       IF(numpe == i) CALL MPI_RECV(g_num_pp,bufsize,MPI_INTEGER,0,i,         &
                                    MPI_COMM_WORLD,status,ier)
@@ -1316,7 +1316,7 @@ MODULE INPUT
         iel = readCount(i)
         READ(10) g_num(:,1:iel)
         CALL MPI_SEND(g_num(:,1:readCount(i)),bufsize,MPI_INTEGER,i-1,i,     &
-                      MPI_COMM_WORLD,status,ier)
+                      MPI_COMM_WORLD,ier)
       END IF
       IF(numpe == i) CALL MPI_RECV(g_num_pp,bufsize,MPI_INTEGER,0,i,         &
                                    MPI_COMM_WORLD,status,ier)
@@ -1467,7 +1467,7 @@ MODULE INPUT
           READ(10,*)k,k,k,k,g_num(:,iel)
         END DO
         CALL MPI_SEND(g_num(:,1:readCount(i)),bufsize,MPI_INTEGER,i-1,i,     &
-                      MPI_COMM_WORLD,status,ier)
+                      MPI_COMM_WORLD,ier)
       END IF
       IF(numpe == i) THEN
         g_num = 0
@@ -1763,7 +1763,7 @@ MODULE INPUT
         READ(10,*) etype(1:readCount(i))
 !       etype_pp(1:readCount(i))=int(etype(1:readCount(i)))
         CALL MPI_SEND(etype(1:readCount(i)),bufsize,MPI_REAL8,i-1,i,           &
-                      MPI_COMM_WORLD,status,ier)
+                      MPI_COMM_WORLD,ier)
       END IF
       IF(numpe == i) THEN
         CALL MPI_RECV(etype(1:readCount(i)),bufsize,MPI_REAL8,0,i,             &
@@ -1912,7 +1912,7 @@ MODULE INPUT
         READ(10) etype(1:readCount(i))
 !       etype_pp(1:readCount(i))=int(etype(1:readCount(i)))
         CALL MPI_SEND(etype(1:readCount(i)),bufsize,MPI_REAL4,i-1,i,           &
-                      MPI_COMM_WORLD,status,ier)
+                      MPI_COMM_WORLD,ier)
       END IF
       IF(numpe == i) THEN
         CALL MPI_RECV(etype(1:readCount(i)),bufsize,MPI_REAL4,0,i,             &
@@ -6002,7 +6002,7 @@ MODULE INPUT
 !          PRINT*,x_temp(ieq)
         END DO
         CALL MPI_SEND(x_temp(1:readCount(i)),bufsize,MPI_REAL8,i-1,i,      &
-                      MPI_COMM_WORLD,status,ier)
+                      MPI_COMM_WORLD,ier)
       END IF
       IF(numpe == i) THEN
         x_temp = 0
@@ -8237,7 +8237,7 @@ SUBROUTINE MESH_ENSI_NDLDS_BIN(argv,nlen,nn,val,node)
         READ(10) etype(1:readCount(i))
 !       etype_pp(1:readCount(i))=int(etype(1:readCount(i)))
         CALL MPI_SEND(etype(1:readCount(i)),bufsize,MPI_REAL4,i-1,i,           &
-                      MPI_COMM_WORLD,status,ier)
+                      MPI_COMM_WORLD,ier)
       END IF
       IF(numpe == i) THEN
         CALL MPI_RECV(etype(1:readCount(i)),bufsize,MPI_REAL4,0,i,             &

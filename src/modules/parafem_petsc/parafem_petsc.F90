@@ -27,17 +27,25 @@ MODULE parafem_petsc
   !*  Arguments with INTENT(in) are copied to local variables of the correct
   !*  type to pass to the PETSc routines.
   !*/
+
+#include <petsc/finclude/petscsys.h>
+#include <petsc/finclude/petscvec.h>
+#include <petsc/finclude/petscmat.h>
+#include <petsc/finclude/petscksp.h>
+#include <petsc/finclude/petscpc.h>
   
   USE, INTRINSIC :: iso_fortran_env, ONLY: int64, real32, error_unit
+  USE petscvec
+  USE petscmat
+  USE petscksp
+  USE mpi
   USE mp_interface
   USE global_variables, ONLY: ntot, nels_pp, neq_pp, numpe
   USE gather_scatter,   ONLY: npes, neq_pp1, num_neq_pp1, threshold, ieq_start
   IMPLICIT NONE
 
-  PUBLIC
 
   ! PETSc types
-#include <petsc/finclude/petscdef.h>
 
   ! Use Fortran interfaces for the PETSc routines:  this helps infinitely in
   ! catching errors, so you get compile time errors like
@@ -47,21 +55,7 @@ MODULE parafem_petsc
   !
   ! instead of run time segmentation violations, usually in a place marginally
   ! related to where the cause of the error is.
-#define PETSC_USE_FORTRAN_INTERFACES
-  ! PETSc modules could be used, but the ParaFEM mp_interface module INCLUDEs
-  ! mpif.h rather than USEing mpi, so there are multiple definitions from the
-  ! USE mpi that is in the PETSc modules.  So include the PETSc headers and
-  ! don't include mpif.h again.
-#define PETSC_AVOID_MPIF_H
-#include <petsc/finclude/petscsys.h>
-#include <petsc/finclude/petscvec.h>
-#include <petsc/finclude/petscvec.h90>
-#include <petsc/finclude/petscmat.h>
-#include <petsc/finclude/petscmat.h90>
-#include <petsc/finclude/petscksp.h>
-#include <petsc/finclude/petscksp.h90>
-#include <petsc/finclude/petscpc.h>
-#include <petsc/finclude/petscpc.h90>
+
 ! PETSc Viewers can be used for testing, see p_assemble in revision 2166 for
 ! commented-out example.
   
@@ -413,6 +407,7 @@ CONTAINS
     PetscInt :: p_neq_pp
     PetscInt, DIMENSION(:),   ALLOCATABLE :: dnz,onz
     PetscInt, DIMENSION(:,:), ALLOCATABLE :: g_g_all
+    PetscInt :: dummyint
 
     p_neq_pp = neq_pp
 
@@ -432,11 +427,11 @@ CONTAINS
     CALL MatSetFromOptions(p_object%A,p_ierr)
     
     CALL MatSeqAIJSetPreallocation(p_object%A,                                 &
-                                   PETSC_NULL_INTEGER,dnz,                     &
+                                   dummyint,dnz,                     &
                                    p_ierr)
     CALL MatMPIAIJSetPreallocation(p_object%A,                                 &
-                                   PETSC_NULL_INTEGER,dnz,                     &
-                                   PETSC_NULL_INTEGER,onz,                     &
+                                   dummyint,dnz,                     &
+                                   dummyint,onz,                     &
                                    p_ierr)
     DEALLOCATE(dnz,onz)
 
@@ -714,7 +709,7 @@ CONTAINS
     END DO
     IF (r - 1 /= n_recvs) THEN ! disaster
       WRITE(error_unit,'(A,I6)') "Error: r - 1 /= n_recvs on process ", numpe
-      CALL MPI_Abort(MPI_COMM_WORLD,ierr)
+      CALL MPI_Abort(MPI_COMM_WORLD, -1, ierr)
     END IF
 
     DO p = 1, npes
@@ -729,13 +724,13 @@ CONTAINS
     IF (r - 1 /= n_recvs + n_sends) THEN ! disaster
       WRITE(error_unit,'(A,I6)')                                               &
         "Error: r - 1 /= n_recvs + n_sends on process ", numpe
-      CALL MPI_Abort(MPI_COMM_WORLD,ierr)
+      CALL MPI_Abort(MPI_COMM_WORLD, -1, ierr)
     END IF
 
     CALL MPI_Waitall(n_recvs + n_sends,requests,MPI_STATUSES_IGNORE,ierr)
     IF (ierr /= MPI_SUCCESS) THEN ! disaster
       WRITE(error_unit,'(A,I6)') "Error: receive/send error on process ", numpe
-      CALL MPI_Abort(MPI_COMM_WORLD,ierr)
+      CALL MPI_Abort(MPI_COMM_WORLD, -1, ierr)
     END IF
 
     CALL MPI_Type_free(PARAFEM_ELEMENT,ierr)
@@ -1072,7 +1067,7 @@ CONTAINS
 
     ! p_object%nsolvers is initialized to 1.  PetscOptionsGetInt does not change
     ! p_object%nsolvers if -nsolvers is not set in xxx.petsc
-    CALL PetscOptionsGetInt(PETSC_NULL_OBJECT,PETSC_NULL_CHARACTER,            &
+    CALL PetscOptionsGetInt(PETSC_NULL_OPTIONS,PETSC_NULL_CHARACTER,            &
                             "-nsolvers",p_object%nsolvers,                     &
                             p_object%nsolvers_set,p_ierr)
 
@@ -1109,7 +1104,7 @@ CONTAINS
     ! PetscOptionsHasName(NULL,"","-ksp_type",...) will look for the option
     ! "-ksp_type", i.e. as if there were no prefix.
     DO s = 1, p_object%nsolvers
-      CALL PetscOptionsHasName(PETSC_NULL_OBJECT,p_object%prefix(s),           &
+      CALL PetscOptionsHasName(PETSC_NULL_OPTIONS,p_object%prefix(s),           &
                                "-ksp_type",set,p_ierr)
       IF (.NOT. set) THEN
         IF (numpe == 1) THEN
@@ -1118,7 +1113,7 @@ CONTAINS
         END IF
         error = .TRUE.
       END IF
-      CALL PetscOptionsHasName(PETSC_NULL_OBJECT,p_object%prefix(s),           &
+      CALL PetscOptionsHasName(PETSC_NULL_OPTIONS,p_object%prefix(s),           &
                                "-ksp_rtol",set,p_ierr)
       IF (.NOT. set) THEN
         IF (numpe == 1) THEN
@@ -1127,7 +1122,7 @@ CONTAINS
         END IF
         error = .TRUE.
       END IF
-      CALL PetscOptionsHasName(PETSC_NULL_OBJECT,p_object%prefix(s),           &
+      CALL PetscOptionsHasName(PETSC_NULL_OPTIONS,p_object%prefix(s),           &
                                "-ksp_max_it",set,p_ierr)
       IF (.NOT. set) THEN
         IF (numpe == 1) THEN
@@ -1136,7 +1131,7 @@ CONTAINS
         END IF
         error = .TRUE.
       END IF
-      CALL PetscOptionsHasName(PETSC_NULL_OBJECT,p_object%prefix(s),           &
+      CALL PetscOptionsHasName(PETSC_NULL_OPTIONS,p_object%prefix(s),           &
                                "-pc_type",set,p_ierr)
       IF (.NOT. set) THEN
         IF (numpe == 1) THEN
@@ -1392,7 +1387,7 @@ CONTAINS
     ! Zero the rows for the fixed freedoms, setting the diagonal entry to
     ! a constant.
     CALL MatZeroRows(p_object%A,n,rows,p_diag,                                 &
-                     PETSC_NULL_OBJECT,PETSC_NULL_OBJECT,p_ierr)
+                     PETSC_NULL_VEC,PETSC_NULL_VEC,p_ierr)
 
     ! Adjust the RHS.
     CALL VecSetValues(b,n,rows,p_diag*values,INSERT_VALUES,p_ierr)
@@ -1773,13 +1768,15 @@ CONTAINS
     Vec         :: w,y
     KSP,POINTER :: ksp
     PetscScalar :: s
+    PetscReal   :: dummyreal
+    PetscInt    :: dummyint
 
     ! Reduce typing
     ksp => p_object%ksp(p_object%solver)
     
     ! Preconditioned residual norm tolerance
-    CALL KSPGetTolerances(ksp,p_object%rtol,PETSC_NULL_REAL,                   &
-                          PETSC_NULL_REAL,PETSC_NULL_INTEGER,p_ierr)
+    CALL KSPGetTolerances(ksp,p_object%rtol,dummyreal,                   &
+                          dummyreal,dummyint,p_ierr)
 
     ! True residual L2 norm
     CALL VecDuplicate(p_object%b,y,p_ierr)
